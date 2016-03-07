@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.security.crypto.codec.Base64;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -16,6 +17,7 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import se.marell.dvestagateway.apimodel.SystemConnectMessage;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
@@ -26,14 +28,19 @@ public class DemoSocketClient {
 
     public static void main(String[] args) throws Exception {
         final String systemId = "s1";
+        final String url = "ws://localhost:8093/gateway-websock";
+        final String username = "s1";
+        final String password = "pass-s1";
 
-//        WebSocketClient transport = new StandardWebSocketClient();
         WebSocketClient transport = new SockJsClient(Arrays.asList((new WebSocketTransport(new StandardWebSocketClient()))));
         WebSocketStompClient client = new WebSocketStompClient(transport);
         client.setMessageConverter(new MappingJackson2MessageConverter());
-//        WebSocketHttpHeaders wsHeaders = new WebSocketHttpHeaders();
-//        wsHeaders.
-        StompSession s = client.connect("ws://localhost:8092/gateway-websock", new ConnectSystemMessageHandler()).get();
+
+        String encoding = new String(Base64.encode((username + ":" + password).getBytes()), Charset.forName("UTF-8"));
+        WebSocketHttpHeaders wsHeaders = new WebSocketHttpHeaders();
+        wsHeaders.add("Authorization", "Basic " + encoding);
+
+        StompSession s = client.connect(url, wsHeaders, new ConnectSystemMessageHandler()).get();
 
         s.subscribe("system-message-request." + systemId, new SystemCommandMessageFrameHandler(s));
 
