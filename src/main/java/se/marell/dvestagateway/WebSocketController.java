@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import se.marell.dvestagateway.apimodel.SystemConnectMessage;
 import se.marell.dvestagateway.apimodel.SystemMessage;
@@ -51,17 +50,11 @@ public class WebSocketController {
         }
     }
 
-    //TODO remove
-//    @Scheduled(fixedRate = 10000)
-//    public void f() {
-//        sendSystemMessage("s1", "foo");
-//    }
-
     public String sendSystemMessage(String systemId, String messageBody) {
         logger.info("sendSystemMessage, systemId: {}, message: {}", systemId, messageBody);
         String messageId = UUID.randomUUID().toString();
-        template.convertAndSend(
-                "system-message-request." + systemId,
+        template.convertAndSendToUser(systemId,
+                "/system-message-request",
                 new SystemMessage(messageId, messageBody));
         return messageId;
     }

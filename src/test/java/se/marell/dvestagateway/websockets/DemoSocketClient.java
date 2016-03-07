@@ -19,6 +19,7 @@ import se.marell.dvestagateway.apimodel.SystemConnectMessage;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 
 /**
  * http://docs.spring.io/spring-framework/docs/4.2.2.RELEASE/spring-framework-reference/html/websocket.html#websocket-fallback-sockjs-client
@@ -27,7 +28,6 @@ public class DemoSocketClient {
     private static final Logger logger = LoggerFactory.getLogger(DemoSocketClient.class);
 
     public static void main(String[] args) throws Exception {
-        final String systemId = "s1";
         final String url = "ws://localhost:8093/gateway-websock";
         final String username = "s1";
         final String password = "pass-s1";
@@ -40,15 +40,23 @@ public class DemoSocketClient {
         WebSocketHttpHeaders wsHeaders = new WebSocketHttpHeaders();
         wsHeaders.add("Authorization", "Basic " + encoding);
 
-        StompSession s = client.connect(url, wsHeaders, new ConnectSystemMessageHandler()).get();
-
-        s.subscribe("system-message-request." + systemId, new SystemCommandMessageFrameHandler(s));
-
         StompHeaders headers = new StompHeaders();
         headers.setDestination("/app/system-connect");
 
-        s.send(headers, new SystemConnectMessage(systemId));
-        System.in.read();
-        s.disconnect();
+        StompSession session = null;
+        while (true) {
+            if (session == null || !session.isConnected()) {
+                logger.info("Not connected, connecting...");
+                try {
+                    session = client.connect(url, wsHeaders, new ConnectSystemMessageHandler()).get();
+                    session.subscribe("/user/system-message-request", new SystemCommandMessageFrameHandler(session));
+                    session.send(headers, new SystemConnectMessage(username));
+                    logger.info("Connected");
+                } catch (InterruptedException | ExecutionException e) {
+                    logger.info("Failed to connect: {}", e.getMessage());
+                }
+            }
+            Thread.sleep(5000);
+        }
     }
 }
