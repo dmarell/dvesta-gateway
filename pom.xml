@@ -110,6 +110,10 @@
             <name>Spring Releases</name>
             <url>http://repo.spring.io/libs-release</url>
         </repository>
+        <repository>
+            <id>marell</id>
+            <url>http://marell.se/artifactory/libs-release/</url>
+        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
