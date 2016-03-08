@@ -114,6 +114,11 @@
             <id>marell</id>
             <url>http://marell.se/artifactory/libs-release/</url>
         </repository>
+        <repository>
+            <id>su</id>
+            <name>su</name>
+            <url>http://maven.it.su.se/it.su.se/maven2</url>
+        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
