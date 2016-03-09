@@ -4,4 +4,3 @@ spring.profiles: local
 
 ---
 spring.profiles: prod
-server.port: 10102
