@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import se.marell.dvestagateway.apimodel.MessageBody;
 import se.marell.dvestagateway.apimodel.SystemMessage;
 
 import java.util.concurrent.CountDownLatch;
@@ -29,9 +30,9 @@ public class MessageController {
     public ResponseEntity<SystemMessage> postSystemMessage(
             @PathVariable("systemId") String systemId,
             @RequestParam(value = "timeout", defaultValue = "5000") int timeout,
-            @RequestBody String messageBody) {
+            @ModelAttribute MessageBody messageBody) {
         logger.info("postSystemMessage, systemId: {}, messageBody: {}", systemId, messageBody);
-        String messageId = wsController.sendSystemMessage(systemId, messageBody);
+        String messageId = wsController.sendSystemMessage(systemId, messageBody.getCommand());
 
         final CountDownLatch latch = new CountDownLatch(1);
         wsController.addSystemMessageResponseListener(messageId, listenerMessageBody -> {
