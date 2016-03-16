@@ -30,8 +30,34 @@ public class MessageController {
     public ResponseEntity<SystemMessage> postSystemMessage(
             @PathVariable("systemId") String systemId,
             @RequestParam(value = "timeout", defaultValue = "5000") int timeout,
-            @ModelAttribute MessageBody messageBody) {
+            @ModelAttribute MessageBody messageBody
+    ) {
         logger.info("postSystemMessage, systemId: {}, messageBody: {}", systemId, messageBody);
+        String messageId = wsController.sendSystemMessage(systemId, messageBody.getCommand());
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        wsController.addSystemMessageResponseListener(messageId, listenerMessageBody -> {
+            latch.countDown();
+            receivedMessageBody = listenerMessageBody;
+        });
+        try {
+            // Wait for response
+            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                return new ResponseEntity<>(HttpStatus.GATEWAY_TIMEOUT);
+            }
+        } catch (InterruptedException e) {
+            return new ResponseEntity<>(HttpStatus.GATEWAY_TIMEOUT);
+        }
+        return new ResponseEntity<>(new SystemMessage(messageId, receivedMessageBody), HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/system/{systemId}/message2", method = RequestMethod.POST)
+    public ResponseEntity<SystemMessage> postSystemMessage2(
+            @PathVariable("systemId") String systemId,
+            @RequestParam(value = "timeout", defaultValue = "5000") int timeout,
+            @RequestBody MessageBody messageBody
+    ) {
+        logger.info("postSystemMessage2, systemId: {}, messageBody: {}", systemId, messageBody);
         String messageId = wsController.sendSystemMessage(systemId, messageBody.getCommand());
 
         final CountDownLatch latch = new CountDownLatch(1);
