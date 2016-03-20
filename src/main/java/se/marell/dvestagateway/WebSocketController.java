@@ -35,13 +35,16 @@ public class WebSocketController {
 
     @MessageMapping("system-message-response")
     public void systemMessageResponse(@Payload SystemMessage message) {
-        logger.info("systemMessageResponse, message: {}", message);
+        logger.debug("systemMessageResponse, message: {}", message);
         notifyAndRemoveSystemMessageResponseListeners(message);
     }
 
     @MessageMapping("byte-data-message-response")
     public void byteDataMessageResponse(@Payload ByteDataMessage message) {
-        logger.info("byteDataMessageResponse, message: {}", message);
+        logger.debug("byteDataMessageResponse, messageid: {}, responseCode: {}, mediaType: {}",
+                message.getMessageId(),
+                message.getMessageBody().getResponseCode(),
+                message.getMessageBody().getMediaType());
         notifyAndRemoveByteDataMessageResponseListeners(message);
     }
 
@@ -69,7 +72,7 @@ public class WebSocketController {
     }
 
     public void sendSystemMessage(String messageId, String systemId, String messageBody) {
-        logger.info("sendSystemMessage, systemId: {}, message: {}", systemId, messageBody);
+        logger.debug("sendSystemMessage, systemId: {}, message: {}", systemId, messageBody);
         template.convertAndSendToUser(systemId,
                 "/system-message-request",
                 new SystemMessage(messageId, messageBody));
